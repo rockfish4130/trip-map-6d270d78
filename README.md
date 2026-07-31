@@ -46,17 +46,19 @@ remote images. If you need a library or asset, inline it.
 ### Runtime services the page *does* call (by design)
 
 Being a single file is not the same as making zero network requests. Once running, the
-page talks to three external services. This is intentional and expected:
+page talks to four external services. This is intentional and expected:
 
 | Service | What for | If it's unavailable |
 |---|---|---|
 | `tile.openstreetmap.org` | base map tiles | map background is blank; markers/lines still draw |
 | `a.tile.opentopomap.org` | optional "Terrain / relief" layer | that layer is blank until switched back |
 | `api.weather.gov` | live NWS forecast for near-term days | days silently fall back to climate normals |
+| `nominatim.openstreetmap.org` | the place-search box (geocoding) | search shows "not found"/"error"; the trip is unaffected |
 
-There are no API keys. NWS sends permissive CORS headers, so the browser can call it
-directly. See [docs/DATA_MODEL.md](docs/DATA_MODEL.md#weather) for how forecasts are
-merged with the built-in normals.
+There are no API keys; all four send permissive CORS headers, so the browser can call
+them directly. See [docs/DATA_MODEL.md](docs/DATA_MODEL.md#weather) for how forecasts are
+merged with the built-in normals, and [the search note](docs/EDITING.md#change-the-place-search)
+for the geocoder.
 
 ### Two invariants that are easy to break
 

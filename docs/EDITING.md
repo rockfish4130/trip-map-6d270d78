@@ -72,6 +72,21 @@ Default: flag when the road distance differs from the listed `mi` by **≥10 mi 
 Change the `>=10` / `>=1.2` / `<=0.8` constants there to widen or narrow it. A leg only
 qualifies if it has a `road_mi` (i.e. `reroute.py` accepted its geometry).
 
+## Change the place search
+
+The search box is an on-map control near the top-left; it geocodes with OSM Nominatim
+and drops an ad-hoc red pin (not part of the layer toggles; pins stack, "Clear" removes
+all). All of it lives in the "Place search" block at the bottom of the script:
+
+- **Best-match vs. list:** `doSearch()` requests `limit=1` and drops a pin on the top
+  result. Raise `limit` and render `a[]` as a chooser if you want a pick-list instead.
+- **Region bias:** the query passes the current map bounds as `viewbox` with
+  `bounded=0` (soft bias — still finds worldwide). Set `bounded=1` to restrict results to
+  the visible area.
+- **Etiquette:** Nominatim's usage policy expects light, user-driven traffic (≤1 req/s)
+  and a valid Referer (the browser sends one automatically). Don't add autocomplete-as-
+  you-type against it without switching to a heavier-duty geocoder.
+
 ## Change the build-date label
 
 It's auto-stamped by `tools/stamp_build.py` at publish time (see
