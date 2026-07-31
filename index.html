@@ -779,11 +779,19 @@ body.tableview #tbl{display:block}
   button{padding:4px 9px;font-size:11.5px}
   .legbody{max-height:40vh;overflow:auto;overscroll-behavior:contain}
 }
+.searchctl{background:var(--surface-1);padding:5px 6px;border-radius:8px;border:1px solid var(--border);
+  box-shadow:0 1px 3px rgba(0,0,0,.18);display:flex;gap:4px;align-items:center}
+.searchctl input{font:inherit;font-size:12px;padding:4px 7px;border:1px solid var(--rule);
+  border-radius:5px;background:var(--surface-1);color:var(--text-primary);width:150px;max-width:44vw}
+.searchctl button{font-size:11.5px;padding:4px 8px}
+.searchpin{display:block;width:18px;height:18px;border-radius:50%;background:#e23b2f;
+  border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)}
+:root[data-theme="dark"] .searchpin{border-color:#1a1a19}
 </style></head><body>
 <header>
   <h1>SE Arizona Sky Islands</h1>
   <span class="sub">Aug 6–20, 2026 · 15 days · <b id="tot"></b> driving miles</span>
-  <span class="sub" id="buildstamp" style="opacity:.7">Built 2026-07-30 21:13 CDT</span>
+  <span class="sub" id="buildstamp" style="opacity:.7">Built 2026-07-30 21:33 CDT</span>
   <span class="spacer"></span>
   <button data-zoom="all">Whole trip</button>
   <button data-zoom="tx">West Texas</button>
@@ -815,6 +823,7 @@ const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
 const topo = L.tileLayer('https://a.tile.opentopomap.org/{z}/{x}/{y}.png',
   {maxZoom:17, attribution:'&copy; OpenTopoMap (CC-BY-SA)'});
 L.control.layers({'Standard':osm,'Terrain / relief':topo},null,{position:'topright'}).addTo(map);
+L.control.scale({imperial:true, metric:true, position:'bottomleft', maxWidth:140}).addTo(map);
 
 const lines=[];
 // Flag legs where the drawn (road-following) length differs a lot from the listed miles.
@@ -1079,4 +1088,56 @@ async function enrichForecasts(){
   }
 }
 enrichForecasts();
+
+// ---- Place search: geocode a name, drop a pin, keep the whole trip on the map ----
+// OSM Nominatim (no key, CORS-ok). Search pins are ad-hoc — not part of the layer toggles.
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+const searchLayer=L.layerGroup().addTo(map);
+const searchMarks=[];
+function addSearchPin(lat,lon,name){
+  const short=name.split(',').slice(0,2).join(',').trim();
+  const m=L.marker([lat,lon],{icon:L.divIcon({className:'pin',html:'<span class="searchpin"></span>',
+    iconSize:[18,18],iconAnchor:[9,9]}),riseOnHover:true,zIndexOffset:1000});
+  m.bindPopup('<div class="pop"><h3>'+esc(short)+'</h3><div class="m">'+esc(name)+'</div>'+
+    '<div class="m" style="margin-top:3px">'+coordStr(lat,lon)+'</div>'+
+    '<p style="margin:6px 0 0"><a href="'+gmap(lat,lon)+'" target="_blank">Open in Maps</a> · '+iolLink(lat,lon)+'</p>'+
+    '<p style="margin:6px 0 0"><a href="#" class="rmpin">Remove this pin</a></p></div>',{maxWidth:280});
+  m.bindTooltip(short,{direction:'top',offset:[0,-8]});
+  m.on('popupopen',function(e){ var a=e.popup.getElement().querySelector('.rmpin');
+    if(a) a.onclick=function(ev){ ev.preventDefault(); searchLayer.removeLayer(m);
+      var i=searchMarks.indexOf(m); if(i>=0) searchMarks.splice(i,1); }; });
+  m.addTo(searchLayer); searchMarks.push(m); m.openPopup();
+}
+async function doSearch(q,btn){
+  q=(q||'').trim(); if(!q) return;
+  var old=btn?btn.textContent:'';
+  var reset=function(t){ if(btn){ btn.textContent=t; setTimeout(function(){ btn.textContent=old; btn.disabled=false; },1100); } };
+  if(btn){ btn.textContent='…'; btn.disabled=true; }
+  try{
+    var b=map.getBounds();
+    var url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q='+encodeURIComponent(q)
+      +'&viewbox='+[b.getWest(),b.getNorth(),b.getEast(),b.getSouth()].join(',')+'&bounded=0';
+    var r=await fetch(url,{headers:{Accept:'application/json'}});
+    if(!r.ok) throw 0;
+    var a=await r.json();
+    if(!a.length){ reset('not found'); return; }
+    var g=a[0]; addSearchPin(+g.lat,+g.lon,g.display_name);
+    map.flyTo([+g.lat,+g.lon],12,{duration:.7});
+    if(btn){ btn.textContent=old; btn.disabled=false; }
+  }catch(e){ reset('error'); }
+}
+const searchCtl=L.control({position:'topleft'});
+searchCtl.onAdd=function(){
+  var div=L.DomUtil.create('div','searchctl');
+  div.innerHTML='<input type="text" placeholder="Search a place…" aria-label="Search a place" spellcheck="false">'+
+    '<button type="button" class="sgo">Go</button>'+
+    '<button type="button" class="sclr" title="Remove all search pins">Clear</button>';
+  var input=div.querySelector('input'), go=div.querySelector('.sgo'), clr=div.querySelector('.sclr');
+  go.onclick=function(){ doSearch(input.value,go); };
+  input.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); doSearch(input.value,go); } });
+  clr.onclick=function(){ searchMarks.slice().forEach(function(m){ searchLayer.removeLayer(m); }); searchMarks.length=0; };
+  L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div);
+  return div;
+};
+searchCtl.addTo(map);
 </script></body></html>
