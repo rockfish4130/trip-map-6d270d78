@@ -1,7 +1,7 @@
 # SE Arizona Sky Islands — trip map
 
 An interactive, **single-file** trip map for a birding/riding road trip through the
-sky islands of southeast Arizona (Aug 6–20, 2026). It's one self-contained
+sky islands of southeast Arizona (Aug 6–19, 2026). It's one self-contained
 `index.html` — a Leaflet map with the itinerary, stops, and driving routes baked in —
 deployed as an unlisted GitHub Pages site.
 

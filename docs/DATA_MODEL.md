@@ -4,7 +4,7 @@ Everything the map draws comes from one JavaScript object literal near the top o
 `<script>` in `index.html`:
 
 ```js
-const D = { days: [...], pois: [...], phases: [...], routes: [...], total: 2172, total_alt: 2240 };
+const D = { days: [...], pois: [...], phases: [...], routes: [...], total: 2275, total_alt: 2255 };
 ```
 
 It is valid JSON (the app never mutates it on disk), so tools can parse it with a simple
@@ -68,7 +68,7 @@ turned off.
 | `mi` | int | Listed miles (planner's estimate; shown in the tooltip label). |
 | `phase` | string | Color. |
 | `style` | string | `"solid"` (main route) or `"dash"` (side trip / alternate). |
-| `label` | string | Tooltip text, e.g. `"Day 9 · Patagonia → Madera Canyon · 44 mi"`. |
+| `label` | string | Tooltip text, e.g. `"Day 9 · Madera Canyon → Patagonia · 65 mi"`. |
 | `road_mi` | float | *Added by `reroute.py`.* Actual road distance of `pts`. Absent if the leg kept its hand-drawn points. Used by `mileFlag()`. |
 
 `total` / `total_alt` are the trip mileage figures shown in the header and the table
