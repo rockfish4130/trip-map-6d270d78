@@ -812,6 +812,21 @@ D.routes.forEach(r=>{
 
 function nws(lat,lon){return 'https://forecast.weather.gov/MapClick.php?lat='+lat+'&lon='+lon;}
 function gmap(lat,lon){return 'https://www.google.com/maps/search/?api=1&query='+lat+','+lon;}
+function coordStr(lat,lon){return lat.toFixed(5)+', '+lon.toFixed(5);}
+// iOverlander has no coordinate deep-link, so this copies the coords to the clipboard
+// (paste into their "Zoom to Location" box) AND opens /explore in a new tab.
+window.iolCopy=function(lat,lon,el){var s=coordStr(lat,lon);
+  var done=function(){if(el){var o=el.textContent;el.textContent='coords copied ✓';
+    setTimeout(function(){el.textContent=o;},1400);}};
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(s).then(done,done);}
+    else{var t=document.createElement('textarea');t.value=s;t.style.position='fixed';t.style.opacity='0';
+      document.body.appendChild(t);t.focus();t.select();document.execCommand('copy');
+      document.body.removeChild(t);done();}}catch(e){}
+  return true;};
+function iolLink(lat,lon){return '<a href="https://ioverlander.com/explore" target="_blank" rel="noopener" '+
+  'onclick="iolCopy('+lat+','+lon+',this)" title="Copies '+coordStr(lat,lon)+
+  ' to your clipboard — paste into iOverlander&#39;s Zoom to Location box">iOverlander</a>';}
 
 // one marker per unique overnight location; days that share a spot share a pin
 const groups=[]; const gi={};
@@ -865,7 +880,7 @@ D.pois.forEach(p=>{
   }
   pm.bindPopup('<div class="pop"><h3>'+p.name+'</h3><div class="m">'+p.elev.toLocaleString()+
      ' ft · '+PN[p.phase]+(p.day?' · '+p.day:'')+'</div><p style="margin:6px 0 0">'+p.note+'</p>'+
-     '<p style="margin:6px 0 0"><a href="'+gmap(p.lat,p.lon)+'" target="_blank">Open in Maps</a></p></div>',
+     '<p style="margin:6px 0 0"><a href="'+gmap(p.lat,p.lon)+'" target="_blank">Open in Maps</a> · '+iolLink(p.lat,p.lon)+'</p></div>',
      {maxWidth:300});
   pm.bindTooltip(p.name,{direction:'top',offset:[0,-6]});
   pm.addTo(LG[p.kind]);
@@ -886,7 +901,7 @@ function pop(d){
    '<p style="margin:6px 0 0"><b>Sleep:</b> '+d.sleep+'</p>'+
    (d.flags.length?'<p style="margin:6px 0 0;color:#a02b2b">'+d.flags.join('<br>')+'</p>':'')+
    '<p style="margin:7px 0 0;font-size:11.5px"><a href="'+nws(d.lat,d.lon)+'" target="_blank">NWS forecast</a> · '+
-   '<a href="'+gmap(d.lat,d.lon)+'" target="_blank">Maps</a></p></div>';
+   '<a href="'+gmap(d.lat,d.lon)+'" target="_blank">Maps</a> · '+iolLink(d.lat,d.lon)+'</p></div>';
 }
 
 const side=document.getElementById('side');
@@ -909,7 +924,7 @@ side.innerHTML='<p class="note"><b>Weather shown is August climate normals, not 
     '<div class="sleep"><b>Sleep:</b> '+d.sleep+'</div>'+
     d.flags.map(f=>'<div class="flag">'+f+'</div>').join('')+
     '<div class="sleep"><a href="'+nws(d.lat,d.lon)+'" target="_blank">NWS forecast</a> · '+
-      '<a href="'+gmap(d.lat,d.lon)+'" target="_blank">Open in Maps</a></div>'+
+      '<a href="'+gmap(d.lat,d.lon)+'" target="_blank">Open in Maps</a> · '+iolLink(d.lat,d.lon)+'</div>'+
   '</div></div>').join('');
 
 let cur=null;
