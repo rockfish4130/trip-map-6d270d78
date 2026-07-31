@@ -36,11 +36,11 @@ OSRM = "http://router.project-osrm.org/route/v1/driving/{}?overview=simplified&g
 # Forced via-points (lat, lon) that preserve the intended corridor for legs
 # where a straight origin->destination route would take the wrong roads.
 VIAS = {
-    4: [(31.9553, -109.2803)],                        # Day 5 DIRT: force over Onion Saddle (FR 42)
-    5: [(32.2100, -108.9600), (32.2529, -109.8318)],  # Day 5 paved ALT: force the I-10 + Willcox loop
+    7: [(32.2100, -108.9600), (32.2529, -109.8318)],  # Day 5 paved: force the I-10 + Willcox loop
+    8: [(31.9553, -109.2803), (32.0121, -109.3416)],  # Day 5 ALT DIRT: Onion Saddle (FR 42) + Chiricahua NM
 }
 # Dirt / forest spurs: if OSRM can't route them, we keep the original points.
-DIRT = {4, 6, 7}
+DIRT = {4, 5, 6, 8, 13}
 
 
 def osrm(waypts):
