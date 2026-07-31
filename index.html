@@ -876,6 +876,7 @@ document.querySelectorAll('.lyr').forEach(b=>b.onclick=()=>{
   if(on) LG[k].addTo(map); else map.removeLayer(LG[k]);
 });
 
+function dtime(d){var m=(d.drive_txt||'').match(/~?\s*\d+\s*h(?:\s*\d+\s*m)?/);return m?m[0].trim():'';}
 function pop(d){
   return '<div class="pop"><h3>Day '+d.n+' · '+d.date+'</h3>'+
    '<div class="m">'+d.title+'</div>'+
@@ -896,7 +897,9 @@ side.innerHTML='<p class="note"><b>Weather shown is August climate normals, not 
  '<div class="card" data-n="'+d.n+'" style="border-left-color:'+pc(d.phase)+'">'+
   '<div class="chd"><span class="num">'+d.n+'</span><span class="dt">'+d.date+'</span></div>'+
   '<div class="ti">'+d.title+'</div>'+
-  '<div class="stats"><span><b>'+d.drive+'</b> mi</span><span><b>'+d.elev.toLocaleString()+
+  '<div class="stats"><span><b>'+d.drive+'</b> mi</span>'+
+    (dtime(d)?'<span><b>'+dtime(d)+'</b></span>':'')+
+    '<span><b>'+d.elev.toLocaleString()+
     '</b> ft</span><span><b>'+d.hi+'°/'+d.lo+'°</b>F</span></div>'+
   '<div class="body">'+
     '<div style="color:var(--muted)">'+d.route+'</div>'+
@@ -947,7 +950,7 @@ document.getElementById('tbl').innerHTML='<table><thead><tr>'+
   '<div style="color:var(--muted);font-size:11px">'+d.route+'</div>'+
   (d.bike?'<div style="font-size:11px;margin-top:4px;color:var(--text-secondary)">'+
     '<b style="color:var(--text-primary)">Ride:</b> '+d.bike+'</div>':'')+'</td>'+
-  '<td class="n">'+d.drive+'</td><td class="n">'+d.elev.toLocaleString()+'</td>'+
+  '<td class="n">'+d.drive+(dtime(d)?'<div style="color:var(--muted);font-size:11px;font-weight:400">'+dtime(d)+'</div>':'')+'</td><td class="n">'+d.elev.toLocaleString()+'</td>'+
   '<td class="n">'+d.hi+' / '+d.lo+'</td><td>'+d.sleep+'</td><td>'+
   (d.flags.join('<br>')||'—')+'</td></tr>').join('')+
  '</tbody><tfoot><tr><th colspan="3">Total</th><th class="n">'+D.total.toLocaleString()+
