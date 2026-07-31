@@ -784,6 +784,12 @@ body.tableview #tbl{display:block}
 .searchctl input{font:inherit;font-size:12px;padding:4px 7px;border:1px solid var(--rule);
   border-radius:5px;background:var(--surface-1);color:var(--text-primary);width:150px;max-width:44vw}
 .searchctl button{font-size:11.5px;padding:4px 8px}
+.searchctl .sctltog{font:inherit;font-size:11.5px;font-weight:650;padding:2px 3px;border:0;background:none;
+  color:var(--text-primary);cursor:pointer;line-height:1.4;white-space:nowrap}
+.searchctl .sctltog::after{content:"  ▸";color:var(--muted)}
+.searchctl.open .sctltog::after{content:"  ▾"}
+.sbody{display:none;gap:4px;align-items:center;margin-left:4px}
+.searchctl.open .sbody{display:flex}
 .searchpin{display:block;width:18px;height:18px;border-radius:50%;background:#e23b2f;
   border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)}
 :root[data-theme="dark"] .searchpin{border-color:#1a1a19}
@@ -791,7 +797,7 @@ body.tableview #tbl{display:block}
 <header>
   <h1>SE Arizona Sky Islands</h1>
   <span class="sub">Aug 6–19, 2026 · 14 days · <b id="tot"></b> driving miles</span>
-  <span class="sub" id="buildstamp" style="opacity:.7">Built 2026-07-31 11:47 CDT</span>
+  <span class="sub" id="buildstamp" style="opacity:.7">Built 2026-07-31 17:25 CDT</span>
   <span class="spacer"></span>
   <button data-zoom="all">Whole trip</button>
   <button data-zoom="tx">West Texas</button>
@@ -1129,13 +1135,20 @@ async function doSearch(q,btn){
 const searchCtl=L.control({position:'topleft'});
 searchCtl.onAdd=function(){
   var div=L.DomUtil.create('div','searchctl');
-  div.innerHTML='<input type="text" placeholder="Search a place…" aria-label="Search a place" spellcheck="false">'+
-    '<button type="button" class="sgo">Go</button>'+
-    '<button type="button" class="sclr" title="Remove all search pins">Clear</button>';
-  var input=div.querySelector('input'), go=div.querySelector('.sgo'), clr=div.querySelector('.sclr');
+  div.innerHTML='<button type="button" class="sctltog" aria-expanded="false" aria-label="Toggle place search">Search</button>'+
+    '<div class="sbody">'+
+      '<input type="text" placeholder="Search a place…" aria-label="Search a place" spellcheck="false">'+
+      '<button type="button" class="sgo">Go</button>'+
+      '<button type="button" class="sclr" title="Remove all search pins">Clear</button>'+
+    '</div>';
+  var tog=div.querySelector('.sctltog'), input=div.querySelector('input'),
+      go=div.querySelector('.sgo'), clr=div.querySelector('.sclr');
+  tog.onclick=function(){ var o=div.classList.toggle('open'); tog.setAttribute('aria-expanded',o);
+    if(o) setTimeout(function(){ input.focus(); },0); };
   go.onclick=function(){ doSearch(input.value,go); };
   input.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); doSearch(input.value,go); } });
   clr.onclick=function(){ searchMarks.slice().forEach(function(m){ searchLayer.removeLayer(m); }); searchMarks.length=0; };
+  if(!window.matchMedia||!window.matchMedia('(max-width:820px)').matches){ div.classList.add('open'); tog.setAttribute('aria-expanded','true'); }
   L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div);
   return div;
 };
