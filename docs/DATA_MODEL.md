@@ -47,6 +47,8 @@ stored literally. If you regenerate `D` from a script, dump with `ensure_ascii=F
 | `note` | string | Popup body. May contain HTML. |
 | `kind` | string | **`"bird"`**, **`"bike"`**, **`"other"`**, **`"hike"`**, or **`"cave"`** — selects the marker shape *and* which toggle layer (`LG.<kind>`) it joins. Each `kind` needs a matching `LG` group, a `.lyr` header button, and a branch in the `D.pois.forEach` renderer. |
 | `day` | string | Free-text day hint like `"Day 6 (Tue)"`, or `""`. |
+| `species` | string[] | *Birding stops only, optional.* Current-AOU common names, rendered as chips linking to All About Birds guide pages. `aabSlug()` builds the URL (strip apostrophes/periods, spaces→`_`, keep hyphens). |
+| `ebird` | string | *Birding stops only, optional.* An `ebird.org/hotspot/L…` URL → that hotspot's "recently seen here" page. Resolved once at build time from the nearest/best-matching eBird hotspot (needs a free eBird API token; the token is never stored in the file). |
 
 Marker shapes: `bird` = open circle in phase color; `bike` = violet rounded square with a
 bike glyph; `other` = small neutral square. This keeps layers distinguishable with color
