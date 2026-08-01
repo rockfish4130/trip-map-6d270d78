@@ -45,7 +45,7 @@ stored literally. If you regenerate `D` from a script, dump with `ensure_ascii=F
 | `elev` | int | Feet. |
 | `phase` | string | Color (one of `phases[].id`). |
 | `note` | string | Popup body. May contain HTML. |
-| `kind` | string | **`"bird"`**, **`"bike"`**, or **`"other"`** — selects the marker shape *and* which toggle layer (`LG.bird` / `LG.bike` / `LG.other`) it joins. |
+| `kind` | string | **`"bird"`**, **`"bike"`**, **`"other"`**, **`"hike"`**, or **`"cave"`** — selects the marker shape *and* which toggle layer (`LG.<kind>`) it joins. Each `kind` needs a matching `LG` group, a `.lyr` header button, and a branch in the `D.pois.forEach` renderer. |
 | `day` | string | Free-text day hint like `"Day 6 (Tue)"`, or `""`. |
 
 Marker shapes: `bird` = open circle in phase color; `bike` = violet rounded square with a
