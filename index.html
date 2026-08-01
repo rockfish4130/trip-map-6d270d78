@@ -798,7 +798,7 @@ body.tableview #tbl{display:block}
 <header>
   <h1>SE Arizona Sky Islands</h1>
   <span class="sub">Aug 6–19, 2026 · 14 days · <b id="tot"></b> driving miles</span>
-  <span class="sub" id="buildstamp" style="opacity:.7">Built 2026-08-01 01:25 CDT</span>
+  <span class="sub" id="buildstamp" style="opacity:.7">Built 2026-08-01 01:35 CDT</span>
   <span class="spacer"></span>
   <button data-zoom="all">Whole trip</button>
   <button data-zoom="tx">West Texas</button>
@@ -857,6 +857,13 @@ D.routes.forEach(r=>{
 function nws(lat,lon){return 'https://forecast.weather.gov/MapClick.php?lat='+lat+'&lon='+lon;}
 function gmap(lat,lon){return 'https://www.google.com/maps/search/?api=1&query='+lat+','+lon;}
 function coordStr(lat,lon){return lat.toFixed(5)+', '+lon.toFixed(5);}
+// Turn any bare URL in itinerary text into a clickable link; iOverlander deep links
+// (e.g. ioverlander.com/places/<guid>) get a tidy "iOverlander" label.
+function linkify(s){return String(s).replace(/(https?:\/\/[^\s<>"')]+)/g,function(u){
+  var label=/ioverlander\.com/i.test(u) ? 'iOverlander ↗'
+    : u.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'');
+  if(label.length>42) label=label.slice(0,40)+'…';
+  return '<a href="'+u+'" target="_blank" rel="noopener">'+label+'</a>';});}
 // iOverlander has no coordinate deep-link, so this copies the coords to the clipboard
 // (paste into their "Zoom to Location" box) AND opens /explore in a new tab.
 window.iolCopy=function(lat,lon,el){var s=coordStr(lat,lon);
@@ -929,14 +936,11 @@ D.pois.forEach(p=>{
       iconSize:[18,18],iconAnchor:[9,9]}),riseOnHover:true,zIndexOffset:300});
   }else{
     pm=L.marker([p.lat,p.lon],{icon:L.divIcon({className:'pin',
-      html:'<svg class="poimark" viewBox="0 0 24 20" width="22" height="18" aria-hidden="true">'+
-        '<path d="M2 14 Q7 7 12 12 Q17 7 22 14" fill="none" stroke="#fff" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>'+
-        '<path d="M2 14 Q7 7 12 12 Q17 7 22 14" fill="none" stroke="var(--p-'+p.phase+')" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>'+
-        '</svg>',
-      iconSize:[22,18],iconAnchor:[11,10]}),riseOnHover:true,zIndexOffset:250});
+      html:'<svg class="poimark" viewBox="0 0 26 26" width="22" height="22" aria-hidden="true"><path d="M23 3.2c-.9.4-1.8.66-2.8.78A4.9 4.9 0 0 0 12 8.3v1.1A11.9 11.9 0 0 1 3.4 4.9a4.9 4.9 0 0 0 1.5 6.5 4.8 4.8 0 0 1-2.2-.6v.06a4.9 4.9 0 0 0 3.9 4.8 4.9 4.9 0 0 1-2.2.08 4.9 4.9 0 0 0 4.6 3.4A9.8 9.8 0 0 1 1 21.2a13.8 13.8 0 0 0 7.5 2.2c9 0 13.9-7.4 13.9-13.9v-.63A9.9 9.9 0 0 0 25 6.3a9.7 9.7 0 0 1-2 .55z" fill="var(--p-'+p.phase+')" stroke="#fff" stroke-width="1" stroke-linejoin="round"/></svg>',
+      iconSize:[22,22],iconAnchor:[11,11]}),riseOnHover:true,zIndexOffset:250});
   }
   pm.bindPopup('<div class="pop"><h3>'+p.name+'</h3><div class="m">'+p.elev.toLocaleString()+
-     ' ft · '+PN[p.phase]+(p.day?' · '+p.day:'')+'</div><p style="margin:6px 0 0">'+p.note+'</p>'+
+     ' ft · '+PN[p.phase]+(p.day?' · '+p.day:'')+'</div><p style="margin:6px 0 0">'+linkify(p.note)+'</p>'+
      '<p style="margin:6px 0 0"><a href="'+gmap(p.lat,p.lon)+'" target="_blank">Open in Maps</a> · '+iolLink(p.lat,p.lon)+'</p></div>',
      {maxWidth:300});
   pm.bindTooltip(p.name,{direction:'top',offset:[0,-6]});
@@ -955,7 +959,7 @@ function pop(d){
    '<p style="margin:7px 0 0"><b>'+d.drive_txt+'</b><br><span class="m">'+d.route+'</span></p>'+
    '<p style="margin:6px 0 0"><b>'+d.elev.toLocaleString()+' ft</b> · '+wxLabel(d)+'<br>'+
    '<span class="m">'+d.wx+'</span></p>'+
-   '<p style="margin:6px 0 0"><b>Sleep:</b> '+d.sleep+'</p>'+
+   '<p style="margin:6px 0 0"><b>Sleep:</b> '+linkify(d.sleep)+'</p>'+
    (d.flags.length?'<p style="margin:6px 0 0;color:#a02b2b">'+d.flags.join('<br>')+'</p>':'')+
    '<p style="margin:7px 0 0;font-size:11.5px"><a href="'+nws(d.lat,d.lon)+'" target="_blank">NWS forecast</a> · '+
    '<a href="'+gmap(d.lat,d.lon)+'" target="_blank">Maps</a> · '+iolLink(d.lat,d.lon)+'</p></div>';
@@ -977,9 +981,9 @@ side.innerHTML='<p class="note"><b>Weather is August climate normals unless a li
   '<div class="body">'+
     '<div style="color:var(--muted)">'+d.route+'</div>'+
     '<div class="wxline">'+d.wx+'</div>'+
-    '<ul>'+d.doing.map(x=>'<li>'+x+'</li>').join('')+'</ul>'+
+    '<ul>'+d.doing.map(x=>'<li>'+linkify(x)+'</li>').join('')+'</ul>'+
     (d.bike?'<div class="ride">'+BIKEINK+d.bike+'</div>':'')+
-    '<div class="sleep"><b>Sleep:</b> '+d.sleep+'</div>'+
+    '<div class="sleep"><b>Sleep:</b> '+linkify(d.sleep)+'</div>'+
     d.flags.map(f=>'<div class="flag">'+f+'</div>').join('')+
     '<div class="sleep"><a href="'+nws(d.lat,d.lon)+'" target="_blank">NWS forecast</a> · '+
       '<a href="'+gmap(d.lat,d.lon)+'" target="_blank">Open in Maps</a> · '+iolLink(d.lat,d.lon)+'</div>'+
@@ -1010,7 +1014,7 @@ lg.onAdd=()=>{const div=L.DomUtil.create('div','legend');
   '<div><span class="sw" style="background:var(--text-secondary)"></span>Planned route</div>'+
   '<div><span class="sw" style="background:repeating-linear-gradient(90deg,var(--text-secondary) 0 6px,transparent 6px 11px)"></span>Side trip / alternate</div>'+
   '<div style="border-top:1px solid var(--grid);margin:6px 0 5px"></div>'+
-  '<div><svg viewBox="0 0 24 12" width="15" height="8" style="margin-right:6px;vertical-align:1px"><path d="M2 9 Q7 3 12 8 Q17 3 22 9" fill="none" stroke="var(--text-secondary)" stroke-width="2.2" stroke-linecap="round"/></svg>Birding stop</div>'+
+  '<div><svg viewBox="0 0 26 26" width="13" height="13" style="margin-right:6px;vertical-align:-2px"><path d="M23 3.2c-.9.4-1.8.66-2.8.78A4.9 4.9 0 0 0 12 8.3v1.1A11.9 11.9 0 0 1 3.4 4.9a4.9 4.9 0 0 0 1.5 6.5 4.8 4.8 0 0 1-2.2-.6v.06a4.9 4.9 0 0 0 3.9 4.8 4.9 4.9 0 0 1-2.2.08 4.9 4.9 0 0 0 4.6 3.4A9.8 9.8 0 0 1 1 21.2a13.8 13.8 0 0 0 7.5 2.2c9 0 13.9-7.4 13.9-13.9v-.63A9.9 9.9 0 0 0 25 6.3a9.7 9.7 0 0 1-2 .55z" fill="var(--text-secondary)"/></svg>Birding stop</div>'+
   '<div><span class="swb" style="background:var(--p-bike)"></span>Riding / trailhead</div>'+
   '<div><span class="swb" style="background:var(--text-secondary)"></span>Other stop</div>'+
   '<div><svg viewBox="0 0 24 24" width="12" height="12" style="margin-right:7px;vertical-align:-1px"><path d="M12 3 L22 21 H2 Z" fill="var(--p-hike)"/></svg>Summit hike</div>'+
@@ -1029,11 +1033,11 @@ document.getElementById('tbl').innerHTML='<table><thead><tr>'+
   '<div style="color:var(--muted);font-size:11px">'+d.route+'</div>'+
   (d.doing&&d.doing.length?'<div style="font-size:11px;margin-top:4px;color:var(--text-secondary)">'+
     '<b style="color:var(--text-primary)">Birding &amp; plan:</b><ul style="margin:2px 0 0;padding-left:15px">'+
-    d.doing.map(x=>'<li>'+x+'</li>').join('')+'</ul></div>':'')+
+    d.doing.map(x=>'<li>'+linkify(x)+'</li>').join('')+'</ul></div>':'')+
   (d.bike?'<div style="font-size:11px;margin-top:4px;color:var(--text-secondary)">'+
     '<b style="color:var(--text-primary)">Ride:</b> '+d.bike+'</div>':'')+'</td>'+
   '<td class="n">'+d.drive+(dtime(d)?'<div style="color:var(--muted);font-size:11px;font-weight:400">'+dtime(d)+'</div>':'')+'</td><td class="n">'+d.elev.toLocaleString()+'</td>'+
-  '<td class="n">'+d.hi+' / '+d.lo+'</td><td>'+d.sleep+'</td><td>'+
+  '<td class="n">'+d.hi+' / '+d.lo+'</td><td>'+linkify(d.sleep)+'</td><td>'+
   (d.flags.join('<br>')||'—')+'</td></tr>').join('')+
  '</tbody><tfoot><tr><th colspan="3">Total</th><th class="n">'+D.total.toLocaleString()+
  '</th><th colspan="4" style="font-weight:400;text-transform:none;letter-spacing:0">'+
