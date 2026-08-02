@@ -794,11 +794,18 @@ body.tableview #tbl{display:block}
 .searchpin{display:block;width:18px;height:18px;border-radius:50%;background:#e23b2f;
   border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)}
 :root[data-theme="dark"] .searchpin{border-color:#1a1a19}
+.locctl{background:var(--surface-1);border:1px solid var(--border);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.locctl button{padding:5px 6px;border:0;background:none;cursor:pointer;color:var(--text-primary);display:block;line-height:0}
+.locctl button:hover{color:#1a73e8}
+.locctl button.on{color:#1a73e8}
+.locctl button.err{color:var(--crit)}
+.locdot{display:block;width:16px;height:16px;border-radius:50%;background:#1a73e8;border:3px solid #fff;
+  box-shadow:0 0 0 1px rgba(26,115,232,.35),0 1px 4px rgba(0,0,0,.45)}
 </style></head><body>
 <header>
   <h1>SE Arizona Sky Islands</h1>
   <span class="sub">Aug 6–19, 2026 · 14 days · <b id="tot"></b> driving miles</span>
-  <span class="sub" id="buildstamp" style="opacity:.7">Built 2026-08-01 16:05 CDT</span>
+  <span class="sub" id="buildstamp" style="opacity:.7">Built 2026-08-01 19:01 CDT</span>
   <span class="spacer"></span>
   <button data-zoom="all">Whole trip</button>
   <button data-zoom="tx">West Texas</button>
@@ -1181,4 +1188,46 @@ searchCtl.onAdd=function(){
   return div;
 };
 searchCtl.addTo(map);
+
+// ---- Live location: blue dot + accuracy ring (device geolocation, on-device only) ----
+let locWatch=null, locDot=null, locRing=null, locBtn=null, locFirst=false;
+function locStop(){
+  if(locWatch!=null){ navigator.geolocation.clearWatch(locWatch); locWatch=null; }
+  if(locDot){ map.removeLayer(locDot); locDot=null; }
+  if(locRing){ map.removeLayer(locRing); locRing=null; }
+  if(locBtn){ locBtn.classList.remove('on'); locBtn.title='Show my location'; }
+}
+function locStart(){
+  if(!navigator.geolocation){ if(locBtn){ locBtn.classList.add('err'); locBtn.title='Location not supported on this device'; } return; }
+  locFirst=true;
+  if(locBtn){ locBtn.classList.remove('err'); locBtn.classList.add('on'); locBtn.title='Locating… (tap to stop)'; }
+  locWatch=navigator.geolocation.watchPosition(function(pos){
+    const ll=[pos.coords.latitude,pos.coords.longitude], acc=pos.coords.accuracy||0;
+    if(!locDot){
+      locDot=L.marker(ll,{icon:L.divIcon({className:'pin',html:'<span class="locdot"></span>',iconSize:[16,16],iconAnchor:[8,8]}),
+        zIndexOffset:2000, interactive:false, keyboard:false}).addTo(map);
+      locRing=L.circle(ll,{radius:acc,color:'#1a73e8',weight:1,fillColor:'#1a73e8',fillOpacity:.12,interactive:false}).addTo(map);
+    }else{ locDot.setLatLng(ll); locRing.setLatLng(ll).setRadius(acc); }
+    if(locBtn) locBtn.title='My location (tap to stop)';
+    if(locFirst){ locFirst=false; map.setView(ll, Math.max(map.getZoom(),14)); }
+  }, function(err){
+    if(locBtn){ locBtn.title = err.code===1 ? 'Location permission denied' : 'Location unavailable'; }
+    locStop();
+    if(locBtn){ locBtn.classList.add('err'); setTimeout(function(){ locBtn.classList.remove('err'); },1800); }
+  }, {enableHighAccuracy:true, maximumAge:5000, timeout:15000});
+}
+const locCtl=L.control({position:'topleft'});
+locCtl.onAdd=function(){
+  const div=L.DomUtil.create('div','locctl');
+  div.innerHTML='<button type="button" title="Show my location" aria-label="Show my location">'+
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">'+
+    '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/>'+
+    '<line x1="12" y1="1.6" x2="12" y2="4.4"/><line x1="12" y1="19.6" x2="12" y2="22.4"/>'+
+    '<line x1="1.6" y1="12" x2="4.4" y2="12"/><line x1="19.6" y1="12" x2="22.4" y2="12"/></svg></button>';
+  locBtn=div.querySelector('button');
+  locBtn.onclick=function(){ if(locWatch!=null) locStop(); else locStart(); };
+  L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div);
+  return div;
+};
+locCtl.addTo(map);
 </script></body></html>
